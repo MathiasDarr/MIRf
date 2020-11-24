@@ -46,6 +46,9 @@
 </template>
 
 <script>
+
+import { mapGetters, mapActions } from "vuex";
+
 export default {
   name: 'Login',
   data () {
@@ -56,6 +59,7 @@ export default {
       loading: false
     }
   },
+
   methods: {
     login () {
         this.loading = true
@@ -64,11 +68,16 @@ export default {
             if (err) {
                 this.error = err
                 this.loading = false
+                
+// this.setEmail(this.email)
             } else {
-                this.$router.push('/profile')
+                this.setEmail(this.email)
+                this.$router.push('/')
             }
         });
-    }
+    },
+    ...mapActions(["setEmail"]),
+    
   }
 }
 </script>

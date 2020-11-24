@@ -115,9 +115,9 @@ export default {
         },
      },
      computed:{
-        ...mapGetters(["styleImageSelection"]),
-        ...mapGetters(["baseImageSelection"]),
-        ...mapGetters(['getReportThumbail'])
+        // ...mapGetters(["styleImageSelection"]),
+        // ...mapGetters(["baseImageSelection"]),
+        // ...mapGetters(['getReportThumbail'])
 
      }
    

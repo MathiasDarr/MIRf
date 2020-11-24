@@ -45,8 +45,6 @@ export default {
   },
   created(){
 
-  
-    
   },
   data(){
     return {
@@ -54,13 +52,6 @@ export default {
         menuItems:[
           {title:'Landing', route:'/' }, 
           {title:'Login', route:'/login/' }, 
-          {title:'Register', route:'/register/' },
-          {title:'Confirm', route:'/confirm/' },
-
-          // {title: 'Kafka Microservices', route:'/eventservices' },
-          // {title: 'Style Transfer', route:'/style' }
-          // // {title:'Style Transfer', icon:'image-filter-hdr', route:'/styletransfer/' },
-
         ],
 
         color: 'primary',

@@ -14,5 +14,5 @@ aws cloudformation package \
 ## Deploys your stack
 aws cloudformation deploy \
     --template-file package.yaml \
-    --stack-name mir-transcriptions-cognito-stack \
+    --stack-name DakobedCognitoUserPool \
     --capabilities CAPABILITY_IAM

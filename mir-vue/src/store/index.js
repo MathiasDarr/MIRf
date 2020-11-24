@@ -1,8 +1,9 @@
 import Vuex from 'vuex';
 import Vue from 'vue';
-import transcriptions from './modules/transcriptions';
 import auth from './modules/auth'
 import upload from './modules/upload'
+import ecom from './modules/ecom'
+
 
 // Load Vuex
 Vue.use(Vuex);
@@ -10,8 +11,8 @@ Vue.use(Vuex);
 // Create store
 export default new Vuex.Store({
   modules: {
-    transcriptions,
     auth,
-    upload
+    upload,
+    ecom
   }
 });
