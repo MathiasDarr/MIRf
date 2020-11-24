@@ -175,8 +175,6 @@ while True:
         try:
             messagebody = message.body
             messagebody = json.loads(messagebody)
-            
-
 
             # if messagebody['type'] =='transforms':
             #     bucket, user, s3_cqt_path, wavpath = perform_transform(messagebody)

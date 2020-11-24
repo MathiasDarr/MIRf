@@ -28,8 +28,8 @@
                 <label for="username">Username</label>
                 <input id="username" type="text" class="form-control" v-model="username" required>
             </div> -->
-            <v-text-field v-model="email" :rules="loginEmailRules" label="E-mail" required></v-text-field>
-            <v-text-field v-model="password" :rules="loginEmailRules" label="Password" required></v-text-field>
+            <v-text-field v-model="email" label="E-mail" required></v-text-field>
+            <v-text-field v-model="password"  label="Password" required></v-text-field>
             <!-- <div class="input-field">
                 <label for="password">Password</label>
                 <input id="password" type="password" class="form-control" v-model="pass" required>
@@ -60,7 +60,7 @@ export default {
     login () {
         this.loading = true
         /*eslint no-unused-vars: "off"*/
-        this.$cognitoAuth.authenticate(this.username, this.pass, (err, result) => {
+        this.$cognitoAuth.authenticate(this.email, this.password, (err, result) => {
             if (err) {
                 this.error = err
                 this.loading = false

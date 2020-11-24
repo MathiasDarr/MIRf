@@ -4,7 +4,7 @@ Description: Dakobed Rest API Service
 
 
 Resources:
-  DakobedUploadApi:
+  UploadAPI:
     Type: AWS::Serverless::Api
     Properties:
       StageName: Prod
@@ -12,11 +12,11 @@ Resources:
       BinaryMediaTypes:
         - application/audio
 
-  UploadAudioFunction:
+  UploadFunction:
     Type: AWS::Serverless::Function
     Properties:
       Timeout: 10
-      FunctionName: UploadAudioFunction
+      FunctionName: UploadFunction
       Policies:
         - SQSSendMessagePolicy:
             QueueName: InitiateTransformsQueue
@@ -32,6 +32,6 @@ Resources:
         UploadApi:
           Type: Api
           Properties:
-            RestApiId: !Ref DakobedUploadApi
+            RestApiId: !Ref UploadAPI
             Path: /upload
             Method: POST

@@ -98,7 +98,6 @@ const mutations = {
         state.loggedIn=False; state.cognitoInfo = {}},
     setCognitoInfo:(state, newValue) => (state.cognitoInfo= newValue),
     setAccessToken:(state, tokens) => {//token, idToken) => {
-
         state.loggedIn = true;
         state.access_token = tokens.acces;
         state.idToken = tokens.id

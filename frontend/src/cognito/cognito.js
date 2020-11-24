@@ -25,7 +25,7 @@ export default class CognitoAuth {
         if (typeof config !== 'object' || Array.isArray(config)) {
             throw new Error('[CognitoAuth error] valid option object required')
         }
-        console.log("WHEN DO I GET CONFIGURED")
+
         this.userPool = new CognitoUserPool({
             UserPoolId: config.UserPoolId,
             ClientId: config.ClientId

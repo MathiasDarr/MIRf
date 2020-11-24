@@ -5,10 +5,7 @@ Parameters:
   SESEmailAddress:
     Type: String
     Default: arn:aws:ses:us-west-2:710339184759:identity/neuralstyleglacier@gmail.com
-  AuthName:
-    Type: String
-    Default: Dakobed Google
-    Description: Unique Auth Name for Cognito Resources
+
 Resources:
   SESRole:
     Type: "AWS::IAM::Role"
@@ -46,9 +43,6 @@ Resources:
       EmailConfiguration:
         EmailSendingAccount: COGNITO_DEFAULT
 
-#        From: neuralstyleglacier@gmail.com
-#        SourceArn: !Ref SESEmailAddress
-
   UserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
@@ -57,12 +51,3 @@ Resources:
       UserPoolId: !Ref UserPool
       ExplicitAuthFlows:
         - ADMIN_NO_SRP_AUTH
-
-#  IdentityPool:
-#    Type: "AWS::Cognito::IdentityPool"
-#    Properties:
-#      IdentityPoolName: !Sub ${AuthName}Identity
-#      AllowUnauthenticatedIdentities: true
-#      CognitoIdentityProviders:
-#        - ClientId: !Ref UserPoolClient
-#          ProviderName: !GetAtt UserPool.ProviderName
