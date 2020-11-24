@@ -17,6 +17,10 @@
         <v-btn dark color="primary" @click="onUpload">Upload Audio File</v-btn>
       </div>
       <!-- <button @click="onUpload">Upload </button> -->
+
+
+
+      
   </div>
 </template>
 
@@ -24,7 +28,8 @@
 /* eslint-disable */
 
 import axios from 'axios'
-import { mapActions } from "vuex";
+
+import { mapActions, mapGetters } from "vuex";
 export default {
     name: 'UploadComponent',
     props: {
@@ -63,9 +68,11 @@ export default {
         },
         onUpload(){
           const fd = new FormData()
-          fd.append('file', this.selectedFile, this.selectedFile.name, fd)
-
-          this.uploadFile()
+          fd.append('user_file', this.selectedFile, this.selectedFile.name, fd)
+          var user = this.getEmail
+          
+          var file_user_object = {'fd':fd, 'user': user}
+          this.uploadFile(file_user_object)
 
           // var authOptions = {
           //   method:'POST',
@@ -85,6 +92,7 @@ export default {
           //   });
         }
     },computed:{
+      ...mapGetters(["getEmail"]),
       formIsValid () {
         return this.title !== '' &&
           this.location !== '' &&

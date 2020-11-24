@@ -50,7 +50,8 @@ export default {
     return {
         drawer: false,
         menuItems:[
-          {title:'Landing', route:'/' }, 
+          {title:'Upload', route:'/' }, 
+
           {title:'Login', route:'/login/' }, 
         ],
 

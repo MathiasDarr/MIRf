@@ -8,6 +8,13 @@
         <div class="title font-weight-medium">
           <v-layout row>
             <v-flex md8>
+              <v-card flat>
+                <AudioRecordingsList />
+
+              </v-card>
+              
+
+
               <v-card  tile flat>
                 <v-card-text>
                   <v-card-title>
@@ -15,10 +22,7 @@
                   </v-card-title>
                 </v-card-text>
               </v-card>
-            </v-flex>
-              <UploadImage />
-            <v-flex md4>
-
+              <UploadFile />
             </v-flex>
           </v-layout>
         
@@ -31,7 +35,9 @@
 <script>
 
 import { mapGetters } from "vuex";
-import UploadImage from './uploads/UploadImage'
+import UploadFile from './uploads/UploadFile'
+import AudioRecordingsList from './audio/AudioRecordingsList'
+
 
 // import axios from 'axios';
 // import * as  AmazonCognitoIdentity from "amazon-cognito-identity-js";
@@ -39,7 +45,8 @@ import UploadImage from './uploads/UploadImage'
 export default {
   
   components:{
-    UploadImage
+    UploadFile,
+    AudioRecordingsList
   },
 
   methods:{

@@ -10,6 +10,8 @@
               <input type ="file" style ="display: none" ref="fileInput" accept="image/*" @change="onFilePicked">
             </v-flex>
           </v-layout>
+
+          
           <v-layout row>
             <v-flex xs12 sm6 offset-sm3>
 
@@ -70,9 +72,8 @@ export default {
         })
    },
     methods:{
-        ...mapActions(["setBaseImageSelection"]),
-        ...mapActions(["setStyleImageSelection"]),
-        ...mapActions(["setReportThumbnail"]),
+        ...mapActions(["uploadFile"]),
+
         onCreateReport(){
           if(!this.formIsValid){
             return

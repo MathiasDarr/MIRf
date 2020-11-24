@@ -3,8 +3,11 @@ from flask import Flask, render_template, request, redirect
 from werkzeug.utils import secure_filename
 from helpers import *
 from config import S3_KEY, S3_SECRET, S3_BUCKET, S3_LOCATION
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
+
 app.config.from_object("config")
 
 s3 = boto3.client("s3", aws_access_key_id=S3_KEY, aws_secret_access_key=S3_SECRET)
@@ -51,6 +54,18 @@ def parse_email(user_email):
     split = user_email.split("@")
     host = split[1].split('.')[0]
     return '{}_{}'.format(split[0], host)
+
+
+@app.route("/recordings/<user>", methods=["GET"])
+def upload_file(user):
+    
+
+
+    return user_upload_file(user, file)
+
+
+
+
 
 
 @app.route("/upload/<user>", methods=["POST"])
