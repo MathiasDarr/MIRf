@@ -9,9 +9,13 @@ app.config.from_object("config")
 
 s3 = boto3.client("s3", aws_access_key_id=S3_KEY, aws_secret_access_key=S3_SECRET)
 
+def parse_email(user_email):
+    split = user_email.split("@")
+    host = split[1].split('.')[0]
+    return '{}_{}'.format(split[0],host)
 
-@app.route("/", methods=["POST"])
-def upload_file():
+@app.route("/upload/<user>", methods=["POST"])
+def upload_file(user):
     """
         These attributes are also available
         file.filename               # The actual name of the file
@@ -19,6 +23,9 @@ def upload_file():
         file.content_length
         file.mimetype
     """
+
+    user_directory = parse_email(user)
+
     # A
     if "user_file" not in request.files:
         return "No user_file key in request.files"
@@ -33,7 +40,7 @@ def upload_file():
         s3.upload_fileobj(
             file,
             S3_BUCKET,
-            file.filename,
+            '{}/{}'.format(user_directory,file.filename),
             ExtraArgs={
                 "ContentType": file.content_type
             }
