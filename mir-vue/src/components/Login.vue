@@ -53,8 +53,8 @@ export default {
   name: 'Login',
   data () {
     return {
-      email: '',
-      password: '',
+      email: 'dakobedbard@gmail.com',
+      password: '1!Iksarmanssss',
       error: null,
       loading: false
     }
