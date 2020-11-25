@@ -6,14 +6,19 @@
         Audio Recordings
       </v-card-title>
     </v-card-text>
+    {{ getUserUploads }}
   </v-card>
  </div>   
 </template>
 
 <script>
 
+import { mapGetters, mapActions } from "vuex";
 
 export default {
+    created(){
+        this.fetchUserUploads(this.getEmail)
+    },
     props: {
 
     },
@@ -23,11 +28,11 @@ export default {
         }
     },
     methods:{
-
+        ...mapActions(["fetchUserUploads"]),
         
     },
     computed:{
-
+        ...mapGetters(["getUserUploads", "getEmail"]),
     }
 
 }

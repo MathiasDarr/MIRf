@@ -9,6 +9,7 @@
           <v-layout row>
             <v-flex md8>
               <v-card flat>
+                {{ getEmail }} 
                 <AudioRecordingsList />
 
               </v-card>
@@ -77,7 +78,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(["getLoggedIn","getJwtAccessToken", "getIdToken", "getEmail"]),
+    ...mapGetters(["getUserUploads", "getEmail"]),
 
   },
 }
