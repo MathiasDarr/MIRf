@@ -1,3 +1,3 @@
 ### Transcriptions Flask API ###
-* export FLASK_APP=app.py
-* python3 -m flask run
+export FLASK_APP=app.py
+python3 -m flask run

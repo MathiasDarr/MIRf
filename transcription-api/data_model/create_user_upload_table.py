@@ -5,7 +5,7 @@ This script creates the dynamoDB transcriptions table
 # !/usr/bin/env python3
 
 import boto3
-dynamodb = boto3.resource('dynamodb', region_name='us-west-2', endpoint_url='http://localhost:8000')
+dynamodb = boto3.resource('dynamodb', region_name='us-west-2') #, endpoint_url='http://localhost:8000')
 try:
     resp = dynamodb.create_table(
         AttributeDefinitions=[
@@ -14,7 +14,7 @@ try:
                 "AttributeType": "S"
             },
             {
-                "AttributeName": "fileurl",
+                "AttributeName": "filename",
                 "AttributeType": "S"
             },
         ],
@@ -25,7 +25,7 @@ try:
                 "KeyType": "HASH"
             },
             {
-                "AttributeName": "fileurl",
+                "AttributeName": "filename",
                 "KeyType": "RANGE"
             }
         ],

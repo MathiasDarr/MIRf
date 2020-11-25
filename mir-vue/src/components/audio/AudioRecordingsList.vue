@@ -6,22 +6,25 @@
         Audio Recordings
       </v-card-title>
     </v-card-text>
-    {{ getUserUploads }}
+
 
 
     <v-card flat>
             <v-list two-line>
             <v-list-item-group >
-                <template v-for="(item, index) in getUserUploads">
+                <template v-for="(item) in getUserUploads">
                   <v-list-item :key="item.filename">
                 
-                    <template>
-                        {{ index }}
-                      <!-- <v-list-item-content @click="selectUserUpload(item.filename)">
-                        <v-list-item-title v-text="item.title"></v-list-item-title>
-                        <v-list-item-subtitle class="text--primary">Guitar </v-list-item-subtitle>
-                      </v-list-item-content> -->
-                    </template>
+                    
+                        <div>
+                            <h4 class = "white00text mb-0 text-left" > {{item.filename}} </h4>
+                            <div> 
+                              <!-- <v-btn text small  > Read More </v-btn> -->
+                              <v-btn text small v-on:click="selectReport(item.filename)"> Delete </v-btn>
+                            </div>
+                        </div>
+
+                
                   </v-list-item>
                   <!-- <v-divider
                     v-if="index + 1 < items.length"
@@ -40,6 +43,8 @@
 <script>
 
 import { mapGetters, mapActions } from "vuex";
+// import router from '../../router'
+
 
 export default {
     created(){

@@ -6,7 +6,7 @@ from config import S3_KEY, S3_SECRET, S3_BUCKET, S3_LOCATION
 from flask_cors import CORS
 from boto3.dynamodb.conditions import Key
 from flask import jsonify
-
+from botocore.exceptions import ClientError
 
 app = Flask(__name__)
 CORS(app)
@@ -17,12 +17,28 @@ s3 = boto3.client("s3", aws_access_key_id=S3_KEY, aws_secret_access_key=S3_SECRE
 dynamo = boto3.resource('dynamodb')  # , endpoint_url='http://localhost:8000')
 table = dynamo.Table('UserUploads')
 
-response = table.query(
-  KeyConditionExpression=Key('user').eq('mddarr@gmail.com')
-)
-print(response['Items'])
 
-
+def delete_user_upload_item(user, filename):
+    """
+    This function deletes a user upload file
+    :param user: authenticated user (partition key of the UserUploads dynamo table)
+    :param filename: filename to be deleted
+    :return:
+    """
+    try:
+        response = table.delete_item(
+            Key={
+                'user': user,
+                'filename': filename
+            },
+        )
+    except ClientError as e:
+        if e.response['Error']['Code'] == "ConditionalCheckFailedException":
+            print(e.response['Error']['Message'])
+        else:
+            raise
+    else:
+        return response
 
 
 def user_upload_file(user, file):
@@ -34,6 +50,8 @@ def user_upload_file(user, file):
     :return:
     """
     user_directory = parse_email(user)
+    filename = file.filename
+    filepath = "{}{}/{}".format(S3_LOCATION, user_directory, filename)
     try:
         s3.upload_fileobj(
             file,
@@ -43,9 +61,6 @@ def user_upload_file(user, file):
                 "ContentType": file.content_type
             }
         )
-        filename = file.filename
-        filepath = "{}{}/{}".format(S3_LOCATION,user_directory, filename)
-
         table.put_item(
             Item={
                 'user': user,
@@ -73,6 +88,11 @@ def get_user_file_uploads(user):
         KeyConditionExpression=Key('user').eq(user)
     )
     return jsonify(response['Items'])
+
+
+@app.route("/recordings/<user>/<filename>", methods=["DELETE"])
+def delete_user_upload_file_uploads(user, filename):
+    return delete_user_upload_file_uploads(user, filename)
 
 
 @app.route("/upload/<user>", methods=["POST"])
