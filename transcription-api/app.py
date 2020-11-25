@@ -4,6 +4,9 @@ from werkzeug.utils import secure_filename
 from helpers import *
 from config import S3_KEY, S3_SECRET, S3_BUCKET, S3_LOCATION
 from flask_cors import CORS
+from boto3.dynamodb.conditions import Key
+from flask import jsonify
+
 
 app = Flask(__name__)
 CORS(app)
@@ -13,6 +16,13 @@ app.config.from_object("config")
 s3 = boto3.client("s3", aws_access_key_id=S3_KEY, aws_secret_access_key=S3_SECRET)
 dynamo = boto3.resource('dynamodb')  # , endpoint_url='http://localhost:8000')
 table = dynamo.Table('UserUploads')
+
+response = table.query(
+  KeyConditionExpression=Key('user').eq('mddarr@gmail.com')
+)
+print(response['Items'])
+
+
 
 
 def user_upload_file(user, file):
@@ -33,13 +43,14 @@ def user_upload_file(user, file):
                 "ContentType": file.content_type
             }
         )
-
-        filepath = "{}{}/{}".format(S3_LOCATION,user_directory, file.filename)
+        filename = file.filename
+        filepath = "{}{}/{}".format(S3_LOCATION,user_directory, filename)
 
         table.put_item(
             Item={
                 'user': user,
-                'fileurl': filepath,
+                'filename': filename,
+                'fileurl': filepath
             }
         )
         return filepath
@@ -57,15 +68,11 @@ def parse_email(user_email):
 
 
 @app.route("/recordings/<user>", methods=["GET"])
-def upload_file(user):
-    
-
-
-    return user_upload_file(user, file)
-
-
-
-
+def get_user_file_uploads(user):
+    response = table.query(
+        KeyConditionExpression=Key('user').eq(user)
+    )
+    return jsonify(response['Items'])
 
 
 @app.route("/upload/<user>", methods=["POST"])
