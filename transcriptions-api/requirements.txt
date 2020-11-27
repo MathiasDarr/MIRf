@@ -1,0 +1,17 @@
+black==19.3b0
+flake8===3.7.8
+Flask-Admin==1.5.3
+Flask-RESTful==0.3.7
+gunicorn==19.9.0
+isort==4.3.21
+pytest==5.0.1
+pytest-cov==2.7.1
+botocore==1.19.25
+boto3==1.16.25
+Flask==1.1.2
+Jinja2==2.11.2
+MarkupSafe==1.1.1
+Werkzeug==1.0.1
+click==7.1.2
+itsdangerous==1.1.0
+Flask-Cors==3.0.9

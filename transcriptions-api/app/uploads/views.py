@@ -32,10 +32,6 @@ class UserUploadList(Resource):
         return jsonify(response['Items'])
 
 
-
-
-
-
 def delete_user_upload_item(user, filename):
     """
     This function deletes a user upload file
