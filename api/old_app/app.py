@@ -6,6 +6,7 @@ from flask_cors import CORS
 from boto3.dynamodb.conditions import Key
 from flask import jsonify
 from botocore.exceptions import ClientError
+import boto3
 
 app = Flask(__name__)
 CORS(app)
