@@ -1,0 +1,336 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: This stack deploys the dakobed-core-services network infrastructure and IAM resources
+  to be used for a service hosted in Amazon ECS using AWS Fargate.
+
+Parameters:
+  VPC:
+    Type: AWS::EC2::VPC::Id
+    Default: vpc-046e9da54adee62cb
+#  SubnetA:
+#    Type: AWS::EC2::Subnet::Id
+#  SubnetB:
+#    Type: AWS::EC2::Subnet::Id
+#  Certificate:
+#    Type: String
+#    # Update with the certificate ARN from Certificate Manager, which must exist in the same region.
+#    Default: 'arn:aws:acm:region:123456789012:certificate/00000000-0000-0000-0000-000000000000'
+  Image:
+    Type: String
+    # Update with the Docker image. "You can use images in the Docker Hub registry or specify other repositories (repository-url/image:tag)."
+    Default: 710339184759.dkr.ecr.us-west-2.amazonaws.com/librosa-flask-repository:latest
+  ServiceName:
+    Type: String
+    Default: LibrosaEcsService
+
+  ContainerPort:
+    Type: Number
+    Default: 80
+  LoadBalancerPort:
+    Type: Number
+    Default: 443
+
+  # for autoscaling
+  MinContainers:
+    Type: Number
+    Default: 1
+  # for autoscaling
+  MaxContainers:
+    Type: Number
+    Default: 2
+  # target CPU utilization (%)
+  AutoScalingTargetValue:
+    Type: Number
+    Default: 1
+
+
+Resources:
+  ECSCluster:
+    Type: 'AWS::ECS::Cluster'
+    Properties:
+      ClusterName: LibrosaFargateCluster
+      CapacityProviders:
+        - FARGATE
+
+
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    # Makes sure the log group is created before it is used.
+    DependsOn: LogGroup
+    Properties:
+      Family: !Join ['', [!Ref ServiceName, TaskDefinition]]
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Cpu: 256
+      Memory: 0.5GB
+      ExecutionRoleArn: !Ref ExecutionRole
+      TaskRoleArn: !Ref TaskRole
+      ContainerDefinitions:
+        - Name: !Ref ServiceName
+          Image: !Ref Image
+          PortMappings:
+            - ContainerPort: !Ref ContainerPort
+          # Send logs to CloudWatch Logs
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: !Ref AWS::Region
+              awslogs-group: !Ref LogGroup
+              awslogs-stream-prefix: ecs
+  # A role needed by ECS
+
+  # A role for the containers
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Join ['', [!Ref ServiceName, TaskRole]]
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: 'sts:AssumeRole'
+
+  ContainerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Join [ '', [ !Ref ServiceName, ContainerSecurityGroup ] ]
+      VpcId: !Ref VPC
+#        Fn::ImportValue:
+#          !Sub "${librosa-flask-vpc-stack}-VPCId"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref ContainerPort
+          ToPort: !Ref ContainerPort
+          SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+
+
+  LoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Join ['', [!Ref ServiceName, LoadBalancerSecurityGroup]]
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref LoadBalancerPort
+          ToPort: !Ref LoadBalancerPort
+          CidrIp: 0.0.0.0/0
+
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Join ['', [/ecs/, !Ref ServiceName, TaskDefinition]]
+
+
+  ExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Join ['', [!Ref ServiceName, ExecutionRole]]
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
+
+#  FlaskServerTask:
+#    Type: AWS::ECS::TaskDefinition
+#    Properties:
+#      ContainerDefinitions:
+#        - ContainerDefinition
+#      Cpu: 256
+#      ExecutionRoleArn: String
+#      Family: awsvpc
+#
+#      IpcMode: String
+#      Memory: 512
+#      NetworkMode: String
+#      PidMode: String
+#      PlacementConstraints:
+#        - TaskDefinitionPlacementConstraint
+#      ProxyConfiguration:
+#        ProxyConfiguration
+#      RequiresCompatibilities:
+#        - FARGATE
+#      Tags:
+#        - Tag
+#      TaskRoleArn: String
+#      Volumes:
+#        - Volume
+#
+
+
+#        family=task_name,
+#        networkMode='awsvpc',
+#        taskRoleArn='arn:aws:iam::710339184759:role/dakobed-ecs-dynamo-role',
+#        executionRoleArn='arn:aws:iam::710339184759:role/ecsTaskExecutionRole',
+#        requiresCompatibilities=['FARGATE'],
+#        cpu='256',
+#        memory='512',
+#        containerDefinitions=[
+#            {
+#                'name': 'dakobedcontainer',
+#                'image': '710339184759.dkr.ecr.us-west-2.amazonaws.com/dakobed/services:latest',
+#                'cpu': 256,
+#                'memory': 512,
+#                'memoryReservation': 123,
+#                'logConfiguration': {
+#                    "logDriver": "awslogs",
+#                    "options": {
+#                        "awslogs-group": "dakobedservice-logs",
+#                        "awslogs-region": "us-west-2",
+#                        "awslogs-stream-prefix": "awslogs-dakobedservice-logs"
+#                    }
+#                },
+#                'portMappings': [
+#                    {
+#                        'containerPort': 8080,
+#                        'hostPort': 8080,
+#                        'protocol': 'http'
+#                    },
+#                ],
+#                'essential': True,
+#            },
+#
+
+
+
+
+#  EcsServiceRole:
+#    Type: AWS::IAM::Role
+#    Properties:
+#      AssumeRolePolicyDocument:
+#        Statement:
+#          - Effect: Allow
+#            Principal:
+#              Service:
+#                - ecs.amazonaws.com
+#                - ecs-tasks.amazonaws.com
+#            Action:
+#              - sts:AssumeRole
+#      Path: /
+#      Policies:
+#        - PolicyName: ecs-service
+#          PolicyDocument:
+#            Statement:
+#              - Effect: Allow
+#                Action:
+#                  # Rules which allow ECS to attach network interfaces to instances
+#                  # on your behalf in order for awsvpc networking mode to work right
+#                  - 'ec2:AttachNetworkInterface'
+#                  - 'ec2:CreateNetworkInterface'
+#                  - 'ec2:CreateNetworkInterfacePermission'
+#                  - 'ec2:DeleteNetworkInterface'
+#                  - 'ec2:DeleteNetworkInterfacePermission'
+#                  - 'ec2:Describe*'
+#                  - 'ec2:DetachNetworkInterface'
+#
+#                  # Rules which allow ECS to update load balancers on your behalf
+#                  # with the information sabout how to send traffic to your containers
+#                  - 'elasticloadbalancing:DeregisterInstancesFromLoadBalancer'
+#                  - 'elasticloadbalancing:DeregisterTargets'
+#                  - 'elasticloadbalancing:Describe*'
+#                  - 'elasticloadbalancing:RegisterInstancesWithLoadBalancer'
+#                  - 'elasticloadbalancing:RegisterTargets'
+#
+#                  # Rules which allow ECS to run tasks that have IAM roles assigned to them.
+#                  - 'iam:PassRole'
+#
+#                  # Rules that let ECS interact with container images.
+#                  - 'ecr:GetAuthorizationToken'
+#                  - 'ecr:BatchCheckLayerAvailability'
+#                  - 'ecr:GetDownloadUrlForLayer'
+#                  - 'ecr:BatchGetImage'
+#
+#                  # Rules that let ECS create and push logs to CloudWatch.
+#                  - 'logs:DescribeLogStreams'
+#                  - 'logs:CreateLogStream'
+#                  - 'logs:CreateLogGroup'
+#                  - 'logs:PutLogEvents'
+#
+#                Resource: '*'
+#
+#  # This is a role which is used by the ECS tasks. Tasks in Amazon ECS define
+#  # the containers that should be deployed togehter and the resources they
+#  # require from a compute/memory perspective. So, the policies below will define
+#  # the IAM permissions that our Dakobed docker containers will have.
+#  # If you attempted to write any code for the Dakobed service that
+#  # interacted with different AWS service APIs, these roles would need to include
+#  # those as allowed actions.
+#  ECSTaskRole:
+#    Type: AWS::IAM::Role
+#    Properties:
+#      AssumeRolePolicyDocument:
+#        Statement:
+#          - Effect: Allow
+#            Principal:
+#              Service: [ecs-tasks.amazonaws.com]
+#            Action: ['sts:AssumeRole']
+#      Path: /
+#      Policies:
+#        - PolicyName: AmazonECSTaskRolePolicy
+#          PolicyDocument:
+#            Statement:
+#              - Effect: Allow
+#                Action:
+#                  - 's3:AbortMultipartUpload'
+#                  - 's3:GetBucketLocation'
+#                  - 's3:GetObject'
+#                  - 's3:ListBucket'
+#                  - 's3:ListBucketMultipartUploads'
+#                  - 's3:PutObject'
+#                Resource: !Ref BucketARN
+#              - Effect: Allow
+#                Action:
+#                  # Allow the ECS Tasks to download images from ECR
+#                  - 'ecr:GetAuthorizationToken'
+#                  - 'ecr:BatchCheckLayerAvailability'
+#                  - 'ecr:GetDownloadUrlForLayer'
+#                  - 'ecr:BatchGetImage'
+#
+#                  # Allow the ECS tasks to upload logs to CloudWatch
+#                  - 'logs:CreateLogStream'
+#                  - 'logs:CreateLogGroup'
+#                  - 'logs:PutLogEvents'
+#                Resource: '*'
+#
+#              - Effect: Allow
+#                Action:
+#                  # Allows the ECS tasks to interact with only the Locations
+#                  # in DynamoDB
+#                  - 'dynamodb:Scan'
+#                  - 'dynamodb:Query'
+#                  - 'dynamodb:UpdateItem'
+#                  - 'dynamodb:GetItem'
+#                Resource: 'arn:aws:dynamodb:*:*:table/UserUploads*'
+#
+#
+#  FargateContainerSecurityGroup:
+#    Type: AWS::EC2::SecurityGroup
+#    Properties:
+#      GroupDescription: Access to the fargate containers from the Internet
+#      VpcId: !Ref 'VPC'
+#      SecurityGroupIngress:
+#        # Allow access to NLB from anywhere on the internet
+#        - CidrIp: !FindInMap ['SubnetConfig', 'VPC', 'CIDR']
+#          IpProtocol: -1
+#
+#
+
+
+
+
+#Fn::ImportValue:
+#  !Sub "${librosa-flask-vpc-stack}-SubnetID"
+
+
+
+#  FargateContainerSecurityGroup:
+#    Description: SGID
+#    Value: !Ref 'FargateContainerSecurityGroup'
+#    Export:
+#      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'FargateContainerSecurityGroup' ] ]

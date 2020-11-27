@@ -146,6 +146,26 @@ Resources:
       ServiceName: !Join [ "", [ "com.amazonaws.", { "Ref": "AWS::Region" }, ".dynamodb" ] ]
       VpcId: !Ref 'VPC'
 
+
+  # The security group for our service containers to be hosted in Fargate.
+  # Even though traffic from users will pass through a Network Load Balancer,
+  # that traffic is purely TCP passthrough, without security group inspection.
+  # Therefore, we will allow for traffic from the Internet to be accepted by our
+  # containers.  But, because the containers will only have Private IP addresses,
+  # the only traffic that will reach the containers is traffic that is routed
+  # to them by the public load balancer on the specific ports that we configure.
+  FargateContainerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to the fargate containers from the Internet
+      VpcId: !Ref 'VPC'
+      SecurityGroupIngress:
+        # Allow access to NLB from anywhere on the internet
+        - CidrIp: !FindInMap ['SubnetConfig', 'VPC', 'CIDR']
+          IpProtocol: -1
+
+
+
 Outputs:
   CurrentRegion:
     Description: REPLACE_ME_REGION

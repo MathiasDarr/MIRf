@@ -1,20 +1,18 @@
 #!/bin/bash
 
-
 if [[ -z $2 ]]
 then
-  stackname=librosa-flask-stack
+  stackname=librosa-ecs--flask-stack
 else
   stackname=$2
 fi
 
 echo ${stackname}
 
-
 if [[ $1 == 'aws' ]]
 then
     aws cloudformation deploy \
-      --template-file aws/cloudformation_core_stack_template.yaml \
+      --template-file aws/ecs_template.yaml \
       --stack-name ${stackname} \
       --capabilities CAPABILITY_NAMED_IAM
 

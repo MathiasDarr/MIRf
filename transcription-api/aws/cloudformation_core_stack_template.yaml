@@ -10,6 +10,18 @@ Parameters:
 
 
 Resources:
+  Type: AWS::ECS::Cluster
+  Properties:
+    CapacityProviders:
+      - String
+    ClusterName: LibrosaEcsCluster
+    ClusterSettings:
+      - ClusterSettings
+    DefaultCapacityProviderStrategy:
+      - CapacityProviderStrategyItem
+    Tags:
+      - Tag
+
 
   EcsServiceRole:
     Type: AWS::IAM::Role
@@ -117,8 +129,26 @@ Resources:
                   - 'dynamodb:Query'
                   - 'dynamodb:UpdateItem'
                   - 'dynamodb:GetItem'
-                Resource: 'arn:aws:dynamodb:*:*:table/Locations*'
+                Resource: 'arn:aws:dynamodb:*:*:table/UserUploads*'
 
+
+  FargateContainerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to the fargate containers from the Internet
+      VpcId: !Ref 'VPC'
+      SecurityGroupIngress:
+        # Allow access to NLB from anywhere on the internet
+        - CidrIp: !FindInMap ['SubnetConfig', 'VPC', 'CIDR']
+          IpProtocol: -1
+
+
+
+
+
+
+Fn::ImportValue:
+  !Sub "${librosa-flask-vpc-stack}-SubnetID"
 
 
 Outputs:
