@@ -1,5 +1,4 @@
-from flask import Flask, render_template
-from flask import Flask, render_template, request, redirect
+from flask import Flask, request
 from werkzeug.utils import secure_filename
 from helpers import *
 from config import S3_KEY, S3_SECRET, S3_BUCKET, S3_LOCATION
@@ -13,8 +12,8 @@ CORS(app)
 
 app.config.from_object("config")
 
-s3 = boto3.client("s3", aws_access_key_id=S3_KEY, aws_secret_access_key=S3_SECRET)
-dynamo = boto3.resource('dynamodb')  # , endpoint_url='http://localhost:8000')
+s3 = boto3.client("s3", region_name='us-west-2') #  aws_access_key_id=S3_KEY, aws_secret_access_key=S3_SECRET)
+dynamo = boto3.resource('dynamodb', region_name='us-west-2')  # , endpoint_url='http://localhost:8000')
 table = dynamo.Table('UserUploads')
 
 
@@ -80,6 +79,11 @@ def parse_email(user_email):
     split = user_email.split("@")
     host = split[1].split('.')[0]
     return '{}_{}'.format(split[0], host)
+
+
+@app.route("/hello", methods=["GET"])
+def hello():
+    return "hello"
 
 
 @app.route("/recordings/<user>", methods=["GET"])
