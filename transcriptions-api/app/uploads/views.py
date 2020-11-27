@@ -4,7 +4,8 @@ from config import S3_LOCATION, S3_BUCKET
 from botocore.exceptions import ClientError
 from flask_cors import CORS
 import boto3
-
+from boto3.dynamodb.conditions import Key
+from flask import jsonify
 
 
 s3 = boto3.client("s3", region_name='us-west-2') #  aws_access_key_id=S3_KEY, aws_secret_access_key=S3_SECRET)
@@ -12,16 +13,27 @@ dynamo = boto3.resource('dynamodb', region_name='us-west-2')  # , endpoint_url='
 table = dynamo.Table('UserUploads')
 
 
-class UploadFile(Resource):
-    def get(self):
-        return "hello"
+class UserUpload(Resource):
 
-    def post(self):
+    def post(self, user):
         parse = reqparse.RequestParser()
         parse.add_argument('file', type=werkzeug.datastructures.FileStorage, location='files')
         args = parse.parse_args()
-        image_file = args['file']
-        image_file.save("your_file_name.jpg")
+        upload_file = args['file']
+        user_upload_file(user, upload_file)
+
+
+
+class UserUploadList(Resource):
+    def get(self, user):
+        response = table.query(
+            KeyConditionExpression=Key('user').eq(user)
+        )
+        return jsonify(response['Items'])
+
+
+
+
 
 
 def delete_user_upload_item(user, filename):
