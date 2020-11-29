@@ -1,0 +1,184 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: This stack deploys the dakobed-core-services network infrastructure and IAM resources
+  to be used for a service hosted in Amazon ECS using AWS Fargate.
+
+Parameters:
+  BucketARN:
+    Type: String
+    Default: arn:aws:s3:::dakobed-transcriptions-service
+
+
+Resources:
+  Type: AWS::ECS::Cluster
+  Properties:
+    CapacityProviders:
+      - String
+    ClusterName: LibrosaEcsCluster
+    ClusterSettings:
+      - ClusterSettings
+    DefaultCapacityProviderStrategy:
+      - CapacityProviderStrategyItem
+    Tags:
+      - Tag
+
+
+  EcsServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs.amazonaws.com
+                - ecs-tasks.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: ecs-service
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  # Rules which allow ECS to attach network interfaces to instances
+                  # on your behalf in order for awsvpc networking mode to work right
+                  - 'ec2:AttachNetworkInterface'
+                  - 'ec2:CreateNetworkInterface'
+                  - 'ec2:CreateNetworkInterfacePermission'
+                  - 'ec2:DeleteNetworkInterface'
+                  - 'ec2:DeleteNetworkInterfacePermission'
+                  - 'ec2:Describe*'
+                  - 'ec2:DetachNetworkInterface'
+
+                  # Rules which allow ECS to update load balancers on your behalf
+                  # with the information sabout how to send traffic to your containers
+                  - 'elasticloadbalancing:DeregisterInstancesFromLoadBalancer'
+                  - 'elasticloadbalancing:DeregisterTargets'
+                  - 'elasticloadbalancing:Describe*'
+                  - 'elasticloadbalancing:RegisterInstancesWithLoadBalancer'
+                  - 'elasticloadbalancing:RegisterTargets'
+
+                  # Rules which allow ECS to run tasks that have IAM roles assigned to them.
+                  - 'iam:PassRole'
+
+                  # Rules that let ECS interact with container images.
+                  - 'ecr:GetAuthorizationToken'
+                  - 'ecr:BatchCheckLayerAvailability'
+                  - 'ecr:GetDownloadUrlForLayer'
+                  - 'ecr:BatchGetImage'
+
+                  # Rules that let ECS create and push logs to CloudWatch.
+                  - 'logs:DescribeLogStreams'
+                  - 'logs:CreateLogStream'
+                  - 'logs:CreateLogGroup'
+                  - 'logs:PutLogEvents'
+
+                Resource: '*'
+
+  # This is a role which is used by the ECS tasks. Tasks in Amazon ECS define
+  # the containers that should be deployed togehter and the resources they
+  # require from a compute/memory perspective. So, the policies below will define
+  # the IAM permissions that our Dakobed docker containers will have.
+  # If you attempted to write any code for the Dakobed service that
+  # interacted with different AWS service APIs, these roles would need to include
+  # those as allowed actions.
+  ECSTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ecs-tasks.amazonaws.com]
+            Action: ['sts:AssumeRole']
+      Path: /
+      Policies:
+        - PolicyName: AmazonECSTaskRolePolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:AbortMultipartUpload'
+                  - 's3:GetBucketLocation'
+                  - 's3:GetObject'
+                  - 's3:ListBucket'
+                  - 's3:ListBucketMultipartUploads'
+                  - 's3:PutObject'
+                Resource: !Ref BucketARN
+              - Effect: Allow
+                Action:
+                  # Allow the ECS Tasks to download images from ECR
+                  - 'ecr:GetAuthorizationToken'
+                  - 'ecr:BatchCheckLayerAvailability'
+                  - 'ecr:GetDownloadUrlForLayer'
+                  - 'ecr:BatchGetImage'
+
+                  # Allow the ECS tasks to upload logs to CloudWatch
+                  - 'logs:CreateLogStream'
+                  - 'logs:CreateLogGroup'
+                  - 'logs:PutLogEvents'
+                Resource: '*'
+
+              - Effect: Allow
+                Action:
+                  # Allows the ECS tasks to interact with only the Locations
+                  # in DynamoDB
+                  - 'dynamodb:Scan'
+                  - 'dynamodb:Query'
+                  - 'dynamodb:UpdateItem'
+                  - 'dynamodb:GetItem'
+                Resource: 'arn:aws:dynamodb:*:*:table/UserUploads*'
+
+
+  FargateContainerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to the fargate containers from the Internet
+      VpcId: !Ref 'VPC'
+      SecurityGroupIngress:
+        # Allow access to NLB from anywhere on the internet
+        - CidrIp: !FindInMap ['SubnetConfig', 'VPC', 'CIDR']
+          IpProtocol: -1
+
+
+
+
+
+
+Fn::ImportValue:
+  !Sub "${librosa-flask-vpc-stack}-SubnetID"
+
+
+Outputs:
+  CurrentRegion:
+    Description: REPLACE_ME_REGION
+    Value: !Ref AWS::Region
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'CurrentRegion' ] ]
+
+  CurrentAccount:
+    Description: REPLACE_ME_ACCOUNT_ID
+    Value: !Ref AWS::AccountId
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'CurrentAccount' ] ]
+
+  EcsServiceRole:
+    Description: REPLACE_ME_ECS_SERVICE_ROLE_ARN
+    Value: !GetAtt 'EcsServiceRole.Arn'
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'EcsServiceRole' ] ]
+
+  ECSTaskRole:
+    Description: REPLACE_ME_ECS_TASK_ROLE_ARN
+    Value: !GetAtt 'ECSTaskRole.Arn'
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'ECSTaskRole' ] ]
+
+
+#  FargateContainerSecurityGroup:
+#    Description: SGID
+#    Value: !Ref 'FargateContainerSecurityGroup'
+#    Export:
+#      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'FargateContainerSecurityGroup' ] ]
